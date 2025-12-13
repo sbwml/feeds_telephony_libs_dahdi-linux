@@ -1,0 +1,33 @@
+From 8f922a0c03a45be85e5ccb65049f05b7ab88fda1 Mon Sep 17 00:00:00 2001
+From: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
+Date: Sun, 3 Aug 2025 11:55:05 -0400
+Subject: [PATCH 6/6] dahdi_base.c: Avoid unnecessary strlen call when with
+ strncat.
+
+It is not necessary to call strlen on the destination buffer
+when calling strncat.
+
+Resolves: #89
+---
+ drivers/dahdi/dahdi-base.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+--- a/drivers/dahdi/dahdi-base.c
++++ b/drivers/dahdi/dahdi-base.c
+@@ -5402,14 +5402,12 @@ static int dahdi_ioctl_get_version(unsig
+ 			 */
+ 			 continue;
+ 		}
+-		strncat(vi.echo_canceller + strlen(vi.echo_canceller),
+-			ec_name, space);
++		strncat(vi.echo_canceller, ec_name, space);
+ 		space -= strlen(ec_name);
+ 		if (space < 1)
+ 			break;
+ 		if (cur->list.next && (cur->list.next != &ecfactory_list)) {
+-			strncat(vi.echo_canceller + strlen(vi.echo_canceller),
+-				", ", space);
++			strncat(vi.echo_canceller, ", ", space);
+ 			space -= 2;
+ 			if (space < 1)
+ 				break;

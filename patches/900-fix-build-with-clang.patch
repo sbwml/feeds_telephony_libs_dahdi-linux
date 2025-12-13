@@ -1,7 +1,7 @@
 --- a/drivers/dahdi/Kbuild
 +++ b/drivers/dahdi/Kbuild
-@@ -69,7 +69,11 @@ ifneq (,$(wildcard $(src)/../staging/ech
- obj-m += dahdi_echocan_oslec.o
+@@ -68,7 +68,11 @@ obj-m += dahdi_echocan_oslec.o
+ obj-m += ../staging/echo/echo.o
  endif
  
 -CFLAGS_MODULE += -I$(DAHDI_INCLUDE) -I$(src) -Wno-format-truncation
@@ -11,5 +11,5 @@
 +  CFLAGS_MODULE += -I$(DAHDI_INCLUDE) -I$(src) -Wno-format-truncation
 +endif
  
- # fix typo present in CentOS and RHEL 2.6.9 kernels
- BAD_KERNELS_VERS := 22 34 34.0.1 34.0.2
+ ifndef HOTPLUG_FIRMWARE
+ ifneq (,$(filter y m,$(CONFIG_FW_LOADER)))

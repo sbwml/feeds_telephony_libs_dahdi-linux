@@ -1,0 +1,30 @@
+From 78b22d07a0ad8b4075a2af57eb5744b8ee3129f3 Mon Sep 17 00:00:00 2001
+From: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
+Date: Tue, 8 Jul 2025 18:35:56 -0400
+Subject: [PATCH 1/6] kernel.h: Add wrappers for del_timer and del_timer_sync.
+
+del_timer[_sync] was renamed to timer_delete[_sync] in kernel
+commit bb663f0f3c396c6d05f6c5eeeea96ced20ff112e, and the
+compatibility wrappers were removed completely in kernel commit
+8fa7292fee5c5240402371ea89ab285ec856c916. Add the wrappers
+back on newer kernels to allow compilation.
+
+Resolves: #91
+---
+ include/dahdi/kernel.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- a/include/dahdi/kernel.h
++++ b/include/dahdi/kernel.h
+@@ -66,6 +66,11 @@
+ #endif /* RHEL_RELEASE_CODE */
+ #endif
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,15,0)
++#define del_timer timer_delete
++#define del_timer_sync timer_delete_sync
++#endif
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>

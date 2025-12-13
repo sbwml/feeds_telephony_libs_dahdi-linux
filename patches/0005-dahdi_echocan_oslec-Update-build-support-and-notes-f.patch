@@ -1,0 +1,100 @@
+From 0c0d3e31d8c2f5714f067fc2f4833481caeb2ae4 Mon Sep 17 00:00:00 2001
+From: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
+Date: Sun, 3 Aug 2025 11:32:48 -0400
+Subject: [PATCH 5/6] dahdi_echocan_oslec: Update build support and notes for
+ OSLEC.
+
+The existing code for OSLEC was long obsolete, due to kernel
+commit 6e2055a9e56e292715f935a85f381e54c1f54269 moving the
+echo directory from drivers/staging to drivers/misc. Moreover,
+this driver was recently removed altogether from the kernel,
+in kernel commit 7f4de1867ef9a787c618e6eb1540b34fef2643ae.
+
+However, the OSLEC code cannot be included here for licensing
+reasons. Thus, we now direct users to the dahdi-linux-extra
+repo, as opposed to the kernel source as before.
+
+Even though the OSLEC driver was moved from drivers/staging
+to drivers/misc before it was removed, since this project
+was never updated to use the new path, and the kernel path
+doesn't matter anymore, we retain the original drivers/staging path
+for compatibility.
+
+Resolves: #88
+---
+ README                              | 35 +++++++++++++++++++++++++++++
+ drivers/dahdi/Kbuild                |  5 ++---
+ drivers/dahdi/dahdi_echocan_oslec.c |  3 +--
+ 3 files changed, 38 insertions(+), 5 deletions(-)
+
+--- a/README
++++ b/README
+@@ -196,6 +196,41 @@ you a clue of the versions installed:
+   find /lib/modules -name dahdi.ko
+ 
+ 
++OSLEC
++~~~~~
++The echo canceller module dahdi_echocan_oslec
++provides a DAHDI echo canceller module that uses the code from OSLEC.
++
++https://www.rowetel.com/ucasterisk/oslec.html[OSLEC] is an
++Open Source Line Echo Canceller. It was previously part of the mainline
++kernel but has since been removed; for licensing reasons, it is
++distributed separately in the dahdi-linux-extra repo.
++
++You can get the OSLEC code from the dahdi-linux-extra Git repository:
++
++  cd /usr/src
++  git clone --depth 1 --single-branch --branch extra-2.10.y https://notabug.org/tzafrir/dahdi-linux-extra.git
++  mv dahdi-linux-extra/drivers/staging dahdi-linux/drivers
++  rm -rf dahdi-linux-extra
++
++To use OSLEC, can copy drivers/staging/echo from dahdi-extra
++to drivers/staging/echo in dahdi-linux; dahdi_echocan_oslec assumes that
++this is where the oslec code lies. If it is elsewhere, you'll need to fix
++the #include line.
++
++After doing that, you'll see the following when building (running
++'make')
++
++  ...
++  CC [M] /usr/src/dahdi-linux/drivers/dahdi/dahdi_echocan_oslec.o
++  CC [M] /usr/src/dahdi-linux/drivers/dahdi/../staging/echo/echo.o
++  ...
++
++As this is an experimental driver, problems building and using it should
++be reported on the
++https://lists.sourceforge.net/lists/listinfo/freetel-oslec[OSLEC mailing
++list].
++
+ ===== LINUX_DIR
+ The relative path to the dahdi-linux tree. The default is '.' and normally
+ there's no reason to override it.
+--- a/drivers/dahdi/Kbuild
++++ b/drivers/dahdi/Kbuild
+@@ -60,9 +60,8 @@ endif
+ 
+ obj-m += $(DAHDI_MODULES_EXTRA)
+ 
+-# If you want to build OSLEC, include the code in the standard location:
+-# drivers/staging/echo . The DAHDI OSLEC echo canceller will be built as
+-# well:
++# If you want to build OSLEC, include the code in drivers/staging/echo
++# The DAHDI OSLEC echo canceller will be built as well:
+ ifneq (,$(wildcard $(src)/../staging/echo/echo.c))
+ obj-m += dahdi_echocan_oslec.o
+ obj-m += ../staging/echo/echo.o
+--- a/drivers/dahdi/dahdi_echocan_oslec.c
++++ b/drivers/dahdi/dahdi_echocan_oslec.c
+@@ -30,9 +30,8 @@
+ #include <linux/ctype.h>
+ #include <linux/moduleparam.h>
+ 
+-/* Fix this if OSLEC is elsewhere */
++/* Change this if OSLEC is elsewhere */
+ #include "../staging/echo/oslec.h"
+-//#include <linux/oslec.h>
+ 
+ #include <dahdi/kernel.h>
+ 

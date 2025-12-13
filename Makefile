@@ -9,13 +9,13 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=dahdi-linux
-PKG_RELEASE:=0
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/asterisk/dahdi-linux.git
-PKG_SOURCE_DATE:=2023-11-21
-PKG_SOURCE_VERSION:=a370c800599b8ee0ca1a843920452941e4d4dadc
-PKG_MIRROR_HASH:=b55e334d2e5edc3d3ef7a0269d99b9c0c55764eab3515c115d3d88f44534c8c7
+PKG_SOURCE_DATE:=2025-1-2
+PKG_SOURCE_VERSION:=648016d6b3a06f7ec75c17ef94ffa17be59eebcf
+PKG_MIRROR_HASH:=7ee29a516f39ab32486f832c5d4c470d182ad2a4593b98337969fda8ecf2e85f
 
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=LICENSE
@@ -38,19 +38,6 @@ endef
 
 define KernelPackage/dahdi/description
   This package contains DAHDI basic infrastructure.
-endef
-
-define KernelPackage/dahdi-echocan-oslec
-  SUBMENU:=Voice over IP
-  TITLE:=DAHDI OSLEC echo canceller support
-  DEPENDS:=kmod-dahdi +kmod-echo
-  URL:=http://www.asterisk.org/
-  FILES:=$(PKG_BUILD_DIR)/drivers/dahdi/dahdi_echocan_oslec.$(LINUX_KMOD_SUFFIX)
-  AUTOLOAD:=$(call AutoProbe,dahdi_echocan_oslec)
-endef
-
-define KernelPackage/dahdi-echocan-oslec/description
-  This package contains DAHDI OSLEC echo canceller support.
 endef
 
 define KernelPackage/dahdi-hfcs
@@ -80,19 +67,20 @@ define KernelPackage/dahdi-dummy/description
   without any real telephony hardware.
 endef
 
+NOSTDINC_FLAGS += \
+	-I$(PKG_BUILD_DIR)/drivers/dahdi/oct612x \
+	-I$(PKG_BUILD_DIR)/drivers/dahdi/oct612x/include \
+	-I$(PKG_BUILD_DIR)/drivers/dahdi/oct612x/octdeviceapi/oct6100api \
+	-DDAHDI_SPAN_OPS \
+	-DHOTPLUG_FIRMWARE
 
 define Build/Configure
-endef
-
-define Build/Prepare
-	$(Build/Prepare/Default)
-	mkdir -p $(PKG_BUILD_DIR)/drivers/staging/echo/
-	$(CP) ./files/oslec.h $(PKG_BUILD_DIR)/drivers/staging/echo/
 endef
 
 define Build/Compile
 	$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
 		$(KERNEL_MAKE_FLAGS) \
+		NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \
 		KSRC="$(LINUX_DIR)"
 endef
 
@@ -106,6 +94,5 @@ define Build/InstallDev
 endef
 
 $(eval $(call KernelPackage,dahdi))
-$(eval $(call KernelPackage,dahdi-echocan-oslec))
 $(eval $(call KernelPackage,dahdi-dummy))
 $(eval $(call KernelPackage,dahdi-hfcs))
